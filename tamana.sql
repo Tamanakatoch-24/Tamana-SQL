@@ -1,4 +1,4 @@
--- Create Departments table
+-- Create Departments table Part-A
 CREATE TABLE Departments (
     dept_id INT PRIMARY KEY,
     dept_name VARCHAR(50) UNIQUE NOT NULL
@@ -11,7 +11,7 @@ CREATE TABLE Courses (
     dept_id INT NOT NULL,
     FOREIGN KEY (dept_id) REFERENCES Departments(dept_id)
 );
--- Insert into Departments
+-- Insert into Departments Part-B
 INSERT INTO Departments (dept_id, dept_name) VALUES
 (1, 'Computer Science'),
 (2, 'Electrical'),
@@ -31,6 +31,7 @@ INSERT INTO Courses (course_id, course_name, dept_id) VALUES
 (108, 'Surveying', 4),
 (109, 'Embedded Systems', 5),
 (110, 'VLSI Design', 5);
+--Part-C
 SELECT dept_name
 FROM Departments
 WHERE dept_id IN (
@@ -39,6 +40,7 @@ WHERE dept_id IN (
     GROUP BY dept_id
     HAVING COUNT(*) > 2
 );
+--Part-D
 GRANT SELECT ON Courses TO viewer_user;
 SELECT * FROM Courses;
 SELECT * FROM Departments;
