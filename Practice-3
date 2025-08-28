@@ -1,0 +1,100 @@
+-- =============================================
+-- CREATE TABLE WITH UNIQUE CONSTRAINT
+-- =============================================
+CREATE TABLE StudentEnrollments (
+    enrollment_id INT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
+    enrollment_date DATE NOT NULL,
+    CONSTRAINT unique_enrollment UNIQUE(student_name, course_id)
+);
+
+-- Insert initial data
+INSERT INTO StudentEnrollments (enrollment_id, student_name, course_id, enrollment_date)
+VALUES 
+(1, 'Ashish', 'CSE101', '2024-07-01'),
+(2, 'Smaran', 'CSE102', '2024-07-01'),
+(3, 'Vaibhav', 'CSE101', '2024-07-01');
+
+-- =============================================
+-- PART A: Prevent Duplicate Enrollments Using Locking
+-- =============================================
+-- User A Transaction (Successful Enrollment)
+START TRANSACTION;
+
+INSERT INTO StudentEnrollments (enrollment_id, student_name, course_id, enrollment_date)
+VALUES (4, 'Ashish', 'CSE101', '2024-07-02'); -- This succeeds the first time only
+
+COMMIT;
+
+-- User B Transaction (Attempt to Enroll Same Student in Same Course)
+START TRANSACTION;
+
+INSERT INTO StudentEnrollments (enrollment_id, student_name, course_id, enrollment_date)
+VALUES (5, 'Ashish', 'CSE101', '2024-07-02'); -- This fails due to UNIQUE constraint
+
+ROLLBACK;
+
+-- Verify table state
+SELECT * FROM StudentEnrollments;
+
+-- =============================================
+-- PART B: Use SELECT FOR UPDATE to Lock Student Record
+-- =============================================
+-- User A (Session 1)
+START TRANSACTION;
+
+-- Lock the specific row for Ashish in CSE101
+SELECT * FROM StudentEnrollments 
+WHERE student_name = 'Ashish' AND course_id = 'CSE101'
+FOR UPDATE;
+
+-- (Keep this transaction open; row is locked)
+
+-- User B (Session 2, concurrently tries to update)
+START TRANSACTION;
+
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-05'
+WHERE student_name = 'Ashish' AND course_id = 'CSE101';
+-- This will WAIT until User A COMMITs or ROLLBACKs
+
+-- User A commits to release lock:
+COMMIT;
+
+-- User B’s UPDATE now proceeds automatically and can then COMMIT
+COMMIT;
+
+-- =============================================
+-- PART C: Demonstrate Locking Preserving Consistency
+-- =============================================
+
+-- Without locking (Risk of Lost Update):
+-- User A reads a value, User B reads same value, both update independently → Data conflict.
+
+-- With locking:
+-- User A locks row using SELECT FOR UPDATE
+START TRANSACTION;
+SELECT * FROM StudentEnrollments 
+WHERE student_name = 'Vaibhav' AND course_id = 'CSE101'
+FOR UPDATE;
+
+-- User A updates:
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-10'
+WHERE student_name = 'Vaibhav' AND course_id = 'CSE101';
+COMMIT;
+
+-- User B waits during User A’s lock, then safely updates:
+START TRANSACTION;
+SELECT * FROM StudentEnrollments 
+WHERE student_name = 'Vaibhav' AND course_id = 'CSE101'
+FOR UPDATE;
+
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-15'
+WHERE student_name = 'Vaibhav' AND course_id = 'CSE101';
+COMMIT;
+
+-- Final data remains consistent:
+SELECT * FROM StudentEnrollments;
