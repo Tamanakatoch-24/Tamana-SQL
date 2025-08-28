@@ -1,16 +1,11 @@
--- =====================================
--- CREATE TABLE
--- =====================================
+
 CREATE TABLE FeePayments (
     payment_id INT PRIMARY KEY,
     student_name VARCHAR(100) NOT NULL,
     amount DECIMAL(10,2) CHECK(amount > 0),
     payment_date DATE NOT NULL
 );
-
--- =====================================
 -- PART A: Insert Multiple Fee Payments in a Transaction (COMMIT)
--- =====================================
 START TRANSACTION;
 
 INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
@@ -64,14 +59,12 @@ ROLLBACK;
 
 -- Verify only original 3 records remain
 SELECT * FROM FeePayments;
-
--- =====================================
 -- PART D: Verify ACID Compliance
--- =====================================
--- 1. Atomicity: Transactions either fully succeed (COMMIT) or fully fail (ROLLBACK)
--- 2. Consistency: Table constraints (PK, CHECK, NOT NULL) ensure valid state
--- 3. Isolation: Run these in separate sessions to confirm no partial reads
--- 4. Durability: Once COMMIT is issued, data persists permanently
+
+ 1. Atomicity: Transactions either fully succeed (COMMIT) or fully fail (ROLLBACK)
+ 2. Consistency: Table constraints (PK, CHECK, NOT NULL) ensure valid state
+3. Isolation: Run these in separate sessions to confirm no partial reads
+4. Durability: Once COMMIT is issued, data persists permanently
 
 -- Final table state:
 SELECT * FROM FeePayments;
