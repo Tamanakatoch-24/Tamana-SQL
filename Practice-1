@@ -1,0 +1,77 @@
+-- =====================================
+-- CREATE TABLE
+-- =====================================
+CREATE TABLE FeePayments (
+    payment_id INT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL,
+    amount DECIMAL(10,2) CHECK(amount > 0),
+    payment_date DATE NOT NULL
+);
+
+-- =====================================
+-- PART A: Insert Multiple Fee Payments in a Transaction (COMMIT)
+-- =====================================
+START TRANSACTION;
+
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (1, 'Ashish', 5000.00, '2024-06-01');
+
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (2, 'Smaran', 4500.00, '2024-06-02');
+
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (3, 'Vaibhav', 5500.00, '2024-06-03');
+
+COMMIT;
+
+-- Verify successful insert
+SELECT * FROM FeePayments;
+
+-- =====================================
+-- PART B: Demonstrate ROLLBACK for Failed Payment Insertion
+-- =====================================
+START TRANSACTION;
+
+-- First insert is valid
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (4, 'Kiran', 6000.00, '2024-06-04');
+
+-- Second insert fails: duplicate ID and negative amount
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (1, 'Ashish', -2000.00, '2024-06-05');
+
+-- If error occurs, rollback
+ROLLBACK;
+
+-- Verify table remains unchanged
+SELECT * FROM FeePayments;
+
+-- =====================================
+-- PART C: Simulate Partial Failure and Ensure Consistent State
+-- =====================================
+START TRANSACTION;
+
+-- Valid insert
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (5, 'Mehul', 3000.00, '2024-06-06');
+
+-- Invalid insert (NULL student_name)
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (6, NULL, 4000.00, '2024-06-07');
+
+-- Rollback entire transaction due to failure
+ROLLBACK;
+
+-- Verify only original 3 records remain
+SELECT * FROM FeePayments;
+
+-- =====================================
+-- PART D: Verify ACID Compliance
+-- =====================================
+-- 1. Atomicity: Transactions either fully succeed (COMMIT) or fully fail (ROLLBACK)
+-- 2. Consistency: Table constraints (PK, CHECK, NOT NULL) ensure valid state
+-- 3. Isolation: Run these in separate sessions to confirm no partial reads
+-- 4. Durability: Once COMMIT is issued, data persists permanently
+
+-- Final table state:
+SELECT * FROM FeePayments;
